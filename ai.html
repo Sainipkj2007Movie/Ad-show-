@@ -1,0 +1,714 @@
+<html><head><base href=".">
+  <title>AI Image Generator Interface</title>
+  <style>
+    :root {
+      --bg-primary: #1a1b26;
+      --bg-secondary: #24283b;
+      --accent: #7aa2f7;
+      --text: #a9b1d6;
+      --hover: #414868;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: var(--bg-secondary);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      background: var(--bg-primary);
+      border: 2px solid var(--hover);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 1rem;
+      font-size: 1rem;
+      resize: vertical;
+    }
+
+    .parameters {
+      display: grid;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .parameter-group {
+      background: var(--bg-primary);
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .option-button {
+      background: var(--bg-primary);
+      color: var(--text);
+      border: 2px solid var(--hover);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option-button.selected {
+      background: var(--accent);
+      color: var(--bg-primary);
+      border-color: var(--accent);
+    }
+
+    .option-button:hover {
+      background: var(--hover);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    .generate-button, .download-button {
+      background: var(--accent);
+      color: var(--bg-primary);
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .generate-button {
+      background: linear-gradient(135deg, var(--accent), #64B678);
+    }
+
+    .generate-button:hover {
+      background: linear-gradient(135deg, #5d7dcc, #4e9960);
+    }
+
+    .download-button:hover {
+      background: #5d7dcc;
+      transform: translateY(-2px);
+    }
+
+    .result {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading {
+      display: none;
+      width: 50px;
+      height: 50px;
+      border: 5px solid var(--bg-secondary);
+      border-top: 5px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #imageResult img, #savedImage img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .saved-container {
+      max-width: 800px;
+      width: 100%;
+      background: var(--bg-secondary);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      margin-top: 2rem;
+    }
+
+    .format-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .format-button {
+      background: var(--bg-primary);
+      color: var(--text);
+      border: 2px solid var(--hover);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .format-button:hover {
+      background: var(--hover);
+    }
+
+    .download-button {
+      margin-bottom: 1rem;
+    }
+
+    .editor-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 2rem auto;
+    }
+
+    .code-editor {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+
+    .preview-container {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+
+    .preview-container iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      border-radius: 8px;
+      background: white;
+    }
+
+    .CodeMirror {
+      height: 500px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 20px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      margin-top: 2rem;
+      position: relative;
+    }
+
+    .screenshot-container {
+      position: relative;
+    }
+
+    .screenshot-container img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      transition: transform 0.3s;
+    }
+
+    .screenshot-container:hover img {
+      transform: scale(1.05);
+      z-index: 2;
+    }
+
+    .dropzone {
+      width: 100%;
+      height: 200px;
+      border: 3px dashed var(--accent);
+      border-radius: 12px;
+      margin: 2rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      transition: all 0.3s;
+      max-width: 800px;
+    }
+
+    .dropzone.dragover {
+      background: var(--hover);
+      border-color: #5d7dcc;
+      transform: scale(1.02);
+    }
+
+    .dropzone-content {
+      text-align: center;
+      color: var(--text);
+    }
+
+    .dropzone-content svg {
+      stroke: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    [draggable="true"] {
+      cursor: grab;
+    }
+
+    [draggable="true"]:active {
+      cursor: grabbing;
+    }
+  </style>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <h1>AI Image Generator</h1>
+    
+    <div class="input-group">
+      <label>Enter your prompt</label>
+      <textarea id="prompt" placeholder="Describe the image you want to generate..."></textarea>
+    </div>
+
+    <div class="parameters">
+      <div class="parameter-group">
+        <label>Style</label>
+        <div class="button-group" id="style-buttons">
+          <button class="option-button selected" data-value="realistic">Realistic</button>
+          <button class="option-button" data-value="artistic">Artistic</button>
+          <button class="option-button" data-value="anime">Anime</button>
+          <button class="option-button" data-value="abstract">Abstract</button>
+        </div>
+      </div>
+
+      <div class="parameter-group">
+        <label>Quality Level: <span id="qualityValue">High</span></label>
+        <div class="button-group" id="quality-buttons">
+          <button class="option-button" data-value="1">Low</button>
+          <button class="option-button" data-value="5">Medium</button>
+          <button class="option-button selected" data-value="10">High</button>
+        </div>
+      </div>
+
+      <div class="parameter-group">
+        <label>Size</label>
+        <div class="button-group" id="size-buttons">
+          <button class="option-button" data-value="512x512">512x512</button>
+          <button class="option-button selected" data-value="768x768">768x768</button>
+          <button class="option-button" data-value="1024x1024">1024x1024</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="generate-button" onclick="generateImage()">Generate Image</button>
+
+    <div class="result">
+      <div class="loading" id="loading"></div>
+      <div id="imageResult"></div>
+    </div>
+  </div>
+
+  <div class="saved-container" id="savedContainer" style="display: none;">
+    <div class="format-buttons">
+      <button class="format-button" onclick="downloadImage('png')">Download PNG</button>
+      <button class="format-button" onclick="downloadImage('jpg')">Download JPG</button>
+      <button class="format-button" onclick="downloadImage('webp')">Download WebP</button>
+    </div>
+    <button class="download-button" onclick="downloadLastImage()">Download Original</button>
+    <div id="savedImage"></div>
+  </div>
+
+  <div class="editor-container">
+    <div class="code-editor">
+      <textarea id="codeEditor"></textarea>
+    </div>
+    <div class="preview-container">
+      <iframe id="preview"></iframe>
+    </div>
+  </div>
+
+  <div id="dropzone" class="dropzone">
+    <div class="dropzone-content">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <p>Drag any element here to download</p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+
+  <script>let lastGeneratedImage = null;
+let imageVersions = [];
+let editor;
+let currentImageFilename = '';
+function setupButtonGroup(groupId) {
+  const group = document.getElementById(groupId);
+  group.addEventListener('click', e => {
+    if (e.target.classList.contains('option-button')) {
+      group.querySelectorAll('.option-button').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      e.target.classList.add('selected');
+      if (groupId === 'quality-buttons') {
+        const qualityMap = {
+          '1': 'Low',
+          '5': 'Medium',
+          '10': 'High'
+        };
+        document.getElementById('qualityValue').textContent = qualityMap[e.target.dataset.value];
+      }
+    }
+  });
+}
+setupButtonGroup('style-buttons');
+setupButtonGroup('quality-buttons');
+setupButtonGroup('size-buttons');
+function getSelectedValue(groupId) {
+  const selected = document.querySelector(`#${groupId} .selected`);
+  return selected ? selected.dataset.value : null;
+}
+async function generateImage() {
+  const prompt = `Generate an image description based on this prompt. 
+    The image should be family-friendly, well-lit, and appropriate for all ages.
+    Return a detailed creative interpretation.
+    
+    interface Response {
+      imageUrl: string;
+      description: string;
+    }
+    
+    example: {
+      "imageUrl": "https://images.websim.ai/generated/example.jpg", 
+      "description": "A heartwarming scene of young children in fluffy white bunny costumes hopping through a sunlit meadow. They carry woven Easter baskets and search for colorful eggs hidden among the spring flowers and fresh grass."
+    }`;
+  const style = getSelectedValue('style-buttons');
+  const quality = getSelectedValue('quality-buttons');
+  const size = getSelectedValue('size-buttons');
+  if (!prompt) {
+    alert('Please enter a prompt first!');
+    return;
+  }
+  const loading = document.getElementById('loading');
+  const imageResult = document.getElementById('imageResult');
+  loading.style.display = 'block';
+  imageResult.innerHTML = '';
+  try {
+    const response = await fetch('/api/ai_completion', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        data: {
+          userPrompt: document.getElementById('prompt').value,
+          style: style,
+          quality: parseInt(quality),
+          size: size
+        }
+      })
+    });
+    const data = await response.json();
+    lastGeneratedImage = data;
+    imageVersions = [data];
+    const currentDate = Date.now();
+    currentImageFilename = `generated-${currentDate}.png`;
+    imageResult.innerHTML = `
+          <div style="text-align: center;">
+            <img src="${data.imageUrl}" alt="${data.description}" onclick="saveImage()" crossorigin="anonymous" />
+            <p style="margin-top: 1rem; font-style: italic;">${data.description}</p>
+          </div>
+        `;
+    document.getElementById('savedContainer').style.display = 'block';
+    document.getElementById('savedImage').innerHTML = `
+          <div style="text-align: center;">
+            <img src="${data.imageUrl}" alt="${data.description}" crossorigin="anonymous" />
+            <p style="margin-top: 1rem; font-style: italic;">${data.description}</p>
+          </div>
+        `;
+    if (data.imageUrl) {
+      if (editor) {
+        editor.setValue(getInitialContent());
+      }
+      takeScreenshot();
+    }
+  } catch (error) {
+    imageResult.innerHTML = `
+          <div style="text-align: center; color: #ff9580;">
+            <p>Error generating image. Please try again.</p>
+          </div>
+        `;
+    console.error('Error:', error);
+  } finally {
+    loading.style.display = 'none';
+  }
+  initDragAndDrop();
+}
+async function downloadImage(format) {
+  if (!lastGeneratedImage) return;
+  try {
+    const blob = await fetchImageAsBlob(lastGeneratedImage.imageUrl);
+    const canvas = document.createElement('canvas');
+    const img = await createImageBitmap(blob);
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const mimeType = `image/${format}`;
+    const quality = format === 'png' ? 1 : 0.92;
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `generated-image.${format}`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, mimeType, quality);
+  } catch (error) {
+    console.error('Error converting/downloading image:', error);
+    alert('Error processing image. Please check console for details.');
+  }
+}
+function loadImage(url) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(blob);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+function saveImage() {
+  document.getElementById('savedContainer').style.display = 'block';
+  document.getElementById('savedImage').innerHTML = document.getElementById('imageResult').innerHTML;
+  takeScreenshot();
+  initDragAndDrop();
+}
+async function downloadLastImage() {
+  if (!lastGeneratedImage) return;
+  try {
+    const blob = await fetchImageAsBlob(lastGeneratedImage.imageUrl);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentImageFilename || 'generated-image.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading image:', error);
+    alert('Error downloading image. Please check console for details.');
+  }
+}
+function initCodeEditor() {
+  editor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
+    mode: "htmlmixed",
+    theme: "monokai",
+    lineNumbers: true,
+    autoCloseTags: true,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    indentUnit: 2,
+    tabSize: 2,
+    lineWrapping: true
+  });
+  editor.on('change', updatePreview);
+  const initialContent = getInitialContent();
+  editor.setValue(initialContent);
+}
+function getInitialContent() {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>Hello World</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-image: url('${currentImageFilename}');
+      background-size: cover;
+      background-position: center;
+      min-height: 100vh;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <p>Edit this code to see live changes!</p>
+</body>
+</html>`;
+}
+function updatePreview() {
+  const previewFrame = document.getElementById('preview');
+  const preview = previewFrame.contentDocument || previewFrame.contentWindow.document;
+  preview.open();
+  preview.write(editor.getValue());
+  preview.close();
+}
+async function fetchImageAsBlob(url) {
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      credentials: 'same-origin'
+    });
+    return await response.blob();
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    throw error;
+  }
+}
+async function takeScreenshot() {
+  if (!lastGeneratedImage) return;
+  
+  const sourceImage = document.querySelector('#imageResult img');
+  if (!sourceImage) return;
+
+  try {
+    const response = await fetch(sourceImage.src);
+    const blob = await response.blob();
+    const img = await createImageBitmap(blob);
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    try {
+      const screenshotUrl = canvas.toDataURL('image/png');
+      
+      const gridContainer = document.createElement('div');
+      gridContainer.className = 'screenshot-grid';
+      
+      for (let i = 0; i < 4; i++) {
+        const container = document.createElement('div');
+        container.className = 'screenshot-container';
+        const gridImg = document.createElement('img');
+        gridImg.src = screenshotUrl;
+        gridImg.alt = 'Screenshot ' + (i + 1);
+        gridImg.crossOrigin = 'anonymous';
+        container.appendChild(gridImg);
+        gridContainer.appendChild(container);
+      }
+
+      const savedContainer = document.getElementById('savedContainer');
+      savedContainer.parentNode.insertBefore(gridContainer, savedContainer.nextSibling);
+      
+      initDragAndDrop();
+    } catch (error) {
+      console.error('Error creating screenshot:', error);
+    }
+  } catch (error) {
+    console.error('Error loading image:', error);
+  }
+}
+function initDragAndDrop() {
+  const dropzone = document.getElementById('dropzone');
+  const images = document.querySelectorAll('#imageResult img, #savedImage img, .screenshot-container img');
+  images.forEach(img => {
+    img.setAttribute('draggable', 'true');
+    img.addEventListener('dragstart', handleDragStart);
+  });
+  dropzone.addEventListener('dragover', handleDragOver);
+  dropzone.addEventListener('dragleave', handleDragLeave);
+  dropzone.addEventListener('drop', handleDrop);
+}
+function handleDragStart(e) {
+  e.dataTransfer.setData('text/plain', e.target.src);
+}
+function handleDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('dragover');
+}
+function handleDragLeave(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+}
+async function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  const imageUrl = e.dataTransfer.getData('text/plain');
+  try {
+    const blob = await fetchImageAsBlob(imageUrl);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentImageFilename || 'dragged-image.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading dragged image:', error);
+    alert('Error downloading image. Please check console for details.');
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('prompt').value = "Childcare kids dressed as Easter bunnies on a green field collecting Easter eggs, cheerful daytime scene, safe for work, family friendly";
+  document.querySelector('#style-buttons [data-value="realistic"]').click();
+  document.querySelector('#quality-buttons [data-value="10"]').click();
+  document.querySelector('#size-buttons [data-value="1024x1024"]').click();
+  document.querySelector('.generate-button').click();
+});</script>
+</body>
+</html>
